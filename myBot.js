@@ -1,52 +1,73 @@
 const Coss = require('./index')();
 var CronJob = require('cron').CronJob;
+const fs = require('fs');
 
 const cronInterval = '0 */'+ process.env.TIME_INTERVAL +' * * * *' ;
 
 new CronJob(cronInterval, function() {
-
-  marketBuyAndLimitSell(process.env.ETH_ORDER_SIZE);
+    
+    marketBuyAndLimitSell(process.env.ETH_ORDER_SIZE);
 
 }, null, true, 'America/Los_Angeles');
 
 /** LOGIC */
 
 async function marketBuyAndLimitSell(ethAmmount) {
+
     try{
 
-        const marketSides = await Coss.getMarketSides({Symbol: "coss-eth"});
+        await Coss.getMarketSides({Symbol: "coss-eth"});
         const askPrice = marketSides[1][0];
         const askAmmount = marketSides[1][1];
         
         const sellAt = askPrice * process.env.PROFIT;
         const wantToBuy = parseInt((ethAmmount / askPrice)*10, 10) / 10;  //buy 22.4 coss
         const ammount = wantToBuy > askAmmount ? askAmmount : wantToBuy;  //if less coss is available, less will be bought
-
+        
         try{//BUY
 
-            const myBuyOrder = await Coss.placeLimitOrder({Symbol: 'coss-eth', Side: 'Buy', Price: Number(askPrice), Amount: Number(ammount)});
-            console.log(`bought ${ammount} coss @${askPrice}`);
-            setTimeout(async () => {   
+            await Coss.placeLimitOrder({Symbol: 'coss-eth', Side: 'Buy', Price: Number(askPrice), Amount: Number(ammount)});
+            log(`bought ${ammount} coss @${askPrice}`, 'history.txt', true);
+
+            setTimeout(async () => {
+
                 try{//SELL
                     
-                    const mySellOrder = await Coss.placeLimitOrder({Symbol: 'coss-eth', Side: 'Sell', Price: Number(sellAt), Amount: Number(ammount * process.env.SELL_COSS)});
-                    console.log(`selling ${ammount} coss @${sellAt}`);
+                    await Coss.placeLimitOrder({Symbol: 'coss-eth', Side: 'Sell', Price: Number(sellAt), Amount: Number(ammount * process.env.SELL_COSS)});
+                    log(`selling ${ammount} coss @${sellAt}`, 'hisotry.txt', true);
                     
                 } catch(err){
-                    console.log("fucked up selling-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-");
-                    console.log(err);
+                    log('Error placing limit sell order', 'history.txt', true);
+                    //mySellOrder.then((p)=> {
+                    //    log(err + ' ' + p, 'errors.txt', false);
+                    //});
                 }
             }, 3000);
 
         } catch(err){
-            console.log("fucked up buying-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-");
-            console.log(err);
+            log('Error buying', 'history.txt', true);
+            //myBuyOrder.then((p)=> {
+            //    log(err + ' ' + p, 'errors.txt', false);
+            //});
         }
 
     } catch(err){
-        console.log("fucked up-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-");
-        console.log(err);
+        log('Error getting data', 'history.txt', true);
+        //marketSides.then((p)=> {
+        //    log(err + ' ' + p, 'errors.txt', false);
+        //});
     }
+}
+
+function log(text, file, logToConsole) {
+
+    if(logToConsole) {
+        console.log(text);
+    }
+    fs.appendFile(file, new Date() + ' ...  ' + text + "\n", function (err) {
+        if (err) throw err;
+        console.log('wrote to file! ' + file);
+    });
 }
 /*200 order
 { account_id: 'be96ca0e-6e8a-41ab-936c-87da2e7472c6',
