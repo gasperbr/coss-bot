@@ -4,8 +4,9 @@ const fs = require('fs');
 
 const cronInterval = '0 */'+ process.env.TIME_INTERVAL +' * * * *' ;
 
-new CronJob(cronInterval, function() {
-    
+new CronJob(cronInterval, async function() {
+    //a = await Coss.getMarketSides({Symbol: "coss-eth"});
+    //console.log(a)
     marketBuyAndLimitSell(process.env.ETH_ORDER_SIZE);
 
 }, null, true, 'America/Los_Angeles');
@@ -16,7 +17,7 @@ async function marketBuyAndLimitSell(ethAmmount) {
 
     try{
 
-        await Coss.getMarketSides({Symbol: "coss-eth"});
+        marketSides = await Coss.getMarketSides({Symbol: "coss-eth"});
         const askPrice = marketSides[1][0];
         const askAmmount = marketSides[1][1];
         
@@ -34,9 +35,11 @@ async function marketBuyAndLimitSell(ethAmmount) {
                 try{//SELL
                     
                     await Coss.placeLimitOrder({Symbol: 'coss-eth', Side: 'Sell', Price: Number(sellAt), Amount: Number(ammount * process.env.SELL_COSS)});
+                    console.log(a);
                     log(`selling ${ammount} coss @${sellAt}`, 'hisotry.txt', true);
                     
                 } catch(err){
+                    console.log(err);
                     log('Error placing limit sell order', 'history.txt', true);
                     //mySellOrder.then((p)=> {
                     //    log(err + ' ' + p, 'errors.txt', false);
@@ -45,6 +48,7 @@ async function marketBuyAndLimitSell(ethAmmount) {
             }, 3000);
 
         } catch(err){
+            console.log(err);
             log('Error buying', 'history.txt', true);
             //myBuyOrder.then((p)=> {
             //    log(err + ' ' + p, 'errors.txt', false);
@@ -52,6 +56,7 @@ async function marketBuyAndLimitSell(ethAmmount) {
         }
 
     } catch(err){
+        console.log(err);
         log('Error getting data', 'history.txt', true);
         //marketSides.then((p)=> {
         //    log(err + ' ' + p, 'errors.txt', false);
@@ -62,11 +67,10 @@ async function marketBuyAndLimitSell(ethAmmount) {
 function log(text, file, logToConsole) {
 
     if(logToConsole) {
-        console.log(new date() + " ... " + text);
+        console.log(new Date() + " ... " + text);
     }
     fs.appendFile(file, new Date() + ' ...  ' + text + "\n", function (err) {
         if (err) throw err;
-        console.log('wrote to file! ' + file);
     });
 }
 /*200 order
