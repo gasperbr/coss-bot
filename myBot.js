@@ -5,10 +5,7 @@ const fs = require('fs');
 const cronInterval = '0 */'+ process.env.TIME_INTERVAL +' * * * *' ;
 
 new CronJob(cronInterval, async function() {
-    //a = await Coss.getMarketSides({Symbol: "coss-eth"});
-    //console.log(a)
-    //s = await Coss.placeLimitOrder({Symbol: 'coss-eth', Side: 'Sell', Price: 0.00044000, Amount: 35});
-    //console.log(s)
+    
     marketBuyAndLimitSell(process.env.ETH_ORDER_SIZE);
 
 }, null, true, 'America/Los_Angeles');
@@ -19,12 +16,13 @@ async function marketBuyAndLimitSell(ethAmmount) {
 
     try{
 
-        marketSides = await Coss.getMarketSides({Symbol: "coss-eth"});
+        const marketSides = await Coss.getMarketSides({Symbol: "coss-eth"});
+        //console.log("..........."+marketSides+"...........");
         const askPrice = marketSides[1][0];
         const askAmmount = marketSides[1][1];
         
         const sellAt = parseInt(askPrice * process.env.PROFIT * 100000000,10) / 100000000;
-        const wantToBuy = parseInt((ethAmmount / askPrice)*10, 10) / 10;  //buy 22.4 coss
+        const wantToBuy = parseInt((ethAmmount / askPrice)*1000, 10) / 1000;  //buy 22.4 coss
         const ammount = wantToBuy > askAmmount ? askAmmount : wantToBuy;  //if less coss is available, less will be bought
         
         try{//BUY
@@ -35,13 +33,13 @@ async function marketBuyAndLimitSell(ethAmmount) {
             setTimeout(async () => {
 
                 try{//SELL
-                    
-                    s = await Coss.placeLimitOrder({Symbol: 'coss-eth', Side: 'Sell', Price: Number(sellAt), Amount: Number(ammount * process.env.SELL_COSS)});
-                    console.log(s)
-                    log(`selling ${ammount} coss @${sellAt}`, 'hisotry.txt', true);
+                    const ammountTosell = parseInt(ammount * process.env.SELL_COSS * 100, 10) / 100;
+                    s = await Coss.placeLimitOrder({Symbol: 'coss-eth', Side: 'Sell', Price: Number(sellAt), Amount: Number(ammountTosell)});
+                    //console.log(s)
+                    log(`selling ${ammountTosell} coss @${sellAt}`, 'history.txt', true);
                     
                 } catch(err){
-                    //console.log(err);
+                    console.log(err);
                     log('Error placing limit sell order', 'history.txt', true);
                     //mySellOrder.then((p)=> {
                     //    log(err + ' ' + p, 'errors.txt', false);
@@ -50,7 +48,7 @@ async function marketBuyAndLimitSell(ethAmmount) {
             }, 3000);
 
         } catch(err){
-            //console.log(err);
+            console.log(err);
             log('Error buying', 'history.txt', true);
             //myBuyOrder.then((p)=> {
             //    log(err + ' ' + p, 'errors.txt', false);
@@ -58,7 +56,7 @@ async function marketBuyAndLimitSell(ethAmmount) {
         }
 
     } catch(err){
-        //console.log(err);
+        console.log(err);
         log('Error getting data', 'history.txt', true);
         //marketSides.then((p)=> {
         //    log(err + ' ' + p, 'errors.txt', false);
