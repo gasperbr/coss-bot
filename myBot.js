@@ -6,7 +6,13 @@ const cronInterval = '0 */'+ process.env.TIME_INTERVAL +' * * * *' ;
 
 new CronJob(cronInterval, async function() {
     
-    marketBuyAndLimitSell(process.env.ETH_ORDER_SIZE);
+    const eth = (await Coss.getAccountBalances())[68];
+    var buy = parseFloat(process.env.ETH_ORDER_SIZE);                           //0.004
+    if(eth && eth.currency_code == 'ETH' && eth.available > 0.8) buy += buy;    //0.008
+    if(eth && eth.currency_code == 'ETH' && eth.available > 1.2) buy += buy;    //0.016
+    setTimeout(() => {
+        marketBuyAndLimitSell(buy);
+    }, 3000);
 
 }, null, true, 'America/Los_Angeles');
 
