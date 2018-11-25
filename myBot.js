@@ -3,7 +3,7 @@ const fs = require('fs');
 var CronJob = require('cron').CronJob;
 const cronInterval = '0 */'+ process.env.TIME_INTERVAL +' * * * *' ;
 
-new CronJob('*/10 * * * * *', function() {
+new CronJob(cronInterval, function() {
     
     console.log("executing");
     var eth = null;
