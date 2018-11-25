@@ -3,8 +3,8 @@ var CronJob = require('cron').CronJob;
 const fs = require('fs');
 
 const cronInterval = '0 */'+ process.env.TIME_INTERVAL +' * * * *' ;
-var buyETHBTC = true
-var oldETHBTC = null;
+//var buyETHBTC = true
+//var oldETHBTC = null;
 
 new CronJob(cronInterval, async function() {
     
@@ -16,9 +16,9 @@ new CronJob(cronInterval, async function() {
         await marketBuyAndLimitSell(buy);
     }, 3000);
 
-    if(buyETHBTC){
-    }
-    buyETHBTC = !buyETHBTC;
+//    if(buyETHBTC){
+//    }
+//    buyETHBTC = !buyETHBTC;
 
 }, null, true, 'America/Los_Angeles');
 
