@@ -1,19 +1,14 @@
 const Coss = require('./index')();
-var CronJob = require('cron').CronJob;
 const fs = require('fs');
-
+var CronJob = require('cron').CronJob;
 const cronInterval = '0 */'+ process.env.TIME_INTERVAL +' * * * *' ;
-//var buyETHBTC = true
-//var oldETHBTC = null;
-console.log("CRON INTERVAL: "+cronInterval);
-new CronJob(cronInterval, async function() {
+
+new CronJob('*/10 * * * * *', function() {
     
     console.log("executing");
     var eth = null;
     Coss.getAccountBalances().then((data) => {    
-        eth = typeof data[68] == 'number' ? data[68] : null;
-        [68];
-        
+        eth = data[68];
         var buy = parseFloat(process.env.ETH_ORDER_SIZE);                           //0.004
         if(eth && eth.currency_code == 'ETH' && eth.available > 0.8) buy += buy;    //0.008
         if(eth && eth.currency_code == 'ETH' && eth.available > 1.2) buy += buy;    //0.016
@@ -25,11 +20,6 @@ new CronJob(cronInterval, async function() {
     }).catch((err) => {
         console.log(err);
     });
-        
-//    if(buyETHBTC){
-//    }
-//    buyETHBTC = !buyETHBTC;
-
 }, null, true, 'America/Los_Angeles');
 
 /** LOGIC */
