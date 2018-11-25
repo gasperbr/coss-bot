@@ -5,7 +5,7 @@ const fs = require('fs');
 const cronInterval = '0 */'+ process.env.TIME_INTERVAL +' * * * *' ;
 //var buyETHBTC = true
 //var oldETHBTC = null;
-
+console.log("CRON INTERVAL: "+cronInterval);
 new CronJob(cronInterval, async function() {
     console.log("executing");
     try {
