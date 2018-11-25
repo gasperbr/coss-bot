@@ -3,6 +3,8 @@ var CronJob = require('cron').CronJob;
 const fs = require('fs');
 
 const cronInterval = '0 */'+ process.env.TIME_INTERVAL +' * * * *' ;
+var buyETHBTC = true
+var oldETHBTC = null;
 
 new CronJob(cronInterval, async function() {
     
@@ -10,9 +12,13 @@ new CronJob(cronInterval, async function() {
     var buy = parseFloat(process.env.ETH_ORDER_SIZE);                           //0.004
     if(eth && eth.currency_code == 'ETH' && eth.available > 0.8) buy += buy;    //0.008
     if(eth && eth.currency_code == 'ETH' && eth.available > 1.2) buy += buy;    //0.016
-    setTimeout(() => {
-        marketBuyAndLimitSell(buy);
+    setTimeout(async () => {
+        await marketBuyAndLimitSell(buy);
     }, 3000);
+
+    if(buyETHBTC){
+    }
+    buyETHBTC = !buyETHBTC;
 
 }, null, true, 'America/Los_Angeles');
 
@@ -20,7 +26,7 @@ new CronJob(cronInterval, async function() {
 
 async function marketBuyAndLimitSell(ethAmmount) {
 
-    try{
+    try {
 
         const marketSides = await Coss.getMarketSides({Symbol: "coss-eth"});
         //console.log("..........."+marketSides+"...........");
