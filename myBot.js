@@ -7,20 +7,25 @@ const cronInterval = '0 */'+ process.env.TIME_INTERVAL +' * * * *' ;
 //var oldETHBTC = null;
 console.log("CRON INTERVAL: "+cronInterval);
 new CronJob(cronInterval, async function() {
+    
     console.log("executing");
-    try {
-        const eth = (await Coss.getAccountBalances())[68];
-        console.log(eth);
-    } catch(err) {
-        consolge.log(err);
-    }
-    var buy = parseFloat(process.env.ETH_ORDER_SIZE);                           //0.004
-    if(eth && eth.currency_code == 'ETH' && eth.available > 0.8) buy += buy;    //0.008
-    if(eth && eth.currency_code == 'ETH' && eth.available > 1.2) buy += buy;    //0.016
-    setTimeout(async () => {
-        await marketBuyAndLimitSell(buy);
-    }, 3000);
+    var eth = null;
+    Coss.getAccountBalances().then((data) => {    
+        eth = typeof data[68] == 'number' ? data[68] : null;
+        [68];
+        
+        var buy = parseFloat(process.env.ETH_ORDER_SIZE);                           //0.004
+        if(eth && eth.currency_code == 'ETH' && eth.available > 0.8) buy += buy;    //0.008
+        if(eth && eth.currency_code == 'ETH' && eth.available > 1.2) buy += buy;    //0.016
+        
+        setTimeout(async () => {
+            await marketBuyAndLimitSell(buy);
+        }, 3000);
 
+    }).catch((err) => {
+        console.log(err);
+    });
+        
 //    if(buyETHBTC){
 //    }
 //    buyETHBTC = !buyETHBTC;
