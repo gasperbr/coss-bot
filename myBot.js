@@ -9,9 +9,9 @@ new CronJob(cronInterval, function() {
     var eth = null;
     Coss.getAccountBalances().then((data) => {    
         eth = data[68];
-        var buy = parseFloat(process.env.ETH_ORDER_SIZE);                           //0.004
-        if(eth && eth.currency_code == 'ETH' && eth.available > 0.8) buy += buy;    //0.008
-        if(eth && eth.currency_code == 'ETH' && eth.available > 1.2) buy += buy;    //0.016
+        var buy = parseFloat(process.env.ETH_ORDER_SIZE);                             //0.005
+        if(eth && eth.currency_code == 'ETH' && eth.available > 0.8) buy += buy/2;    //0.007.5
+        if(eth && eth.currency_code == 'ETH' && eth.available > 1.2) buy += buy/2;    //0.011.25
         
         setTimeout(async () => {
             await marketBuyAndLimitSell(buy);
@@ -32,8 +32,8 @@ async function marketBuyAndLimitSell(ethAmmount) {
         //console.log("..........."+marketSides+"...........");
         const askPrice = marketSides[1][0];
         const askAmmount = marketSides[1][1];
-        
-        const sellAt = parseInt(askPrice * process.env.PROFIT * 100000000,10) / 100000000;
+        const profit = sellAtProfit();
+        const sellAt = parseInt(askPrice * profit * 100000000,10) / 100000000;
         const wantToBuy = parseInt((ethAmmount / askPrice)*1000, 10) / 1000;  //buy 22.4 coss
         const ammount = wantToBuy > askAmmount ? askAmmount : wantToBuy;  //if less coss is available, less will be bought
         
@@ -48,7 +48,7 @@ async function marketBuyAndLimitSell(ethAmmount) {
                     const ammountTosell = parseInt(ammount * process.env.SELL_COSS * 100, 10) / 100;
                     s = await Coss.placeLimitOrder({Symbol: 'coss-eth', Side: 'Sell', Price: Number(sellAt), Amount: Number(ammountTosell)});
                     //console.log(s)
-                    log(`selling ${ammountTosell} coss @${sellAt}`, 'history.txt', true);
+                    log(`selling ${ammountTosell} coss @${sellAt} with ${(profit-1) * 100} bruto profit`, 'history.txt', true);
                     
                 } catch(err){
                     console.log(err);
@@ -84,6 +84,12 @@ function log(text, file, logToConsole) {
     fs.appendFile(file, new Date() + ' ...  ' + text + "\n", function (err) {
         if (err) throw err;
     });
+}
+function sellAtProfit() {
+    const upper = process.env.ETH_PROFIT_UPPER || 1.075;
+    const lower = process.env.ETH_PROFIT_LOWER || 1.025; //0.05
+    const price = lower + (Math.random() * (upper - lower)); 
+    return parseInt(price * 100000000, 10) / 100000000;
 }
 /*200 order
 { account_id: 'be96ca0e-6e8a-41ab-936c-87da2e7472c6',
