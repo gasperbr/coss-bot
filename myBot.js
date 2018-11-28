@@ -17,9 +17,8 @@ new CronJob(cronInterval, function() {
         var buy = parseFloat(process.env.ETH_ORDER_SIZE);                             //0.005
         if(eth && eth.currency_code == 'ETH' && eth.available > 0.8) buy += buy/2;    //0.007.5
         if(eth && eth.currency_code == 'ETH' && eth.available > 1.2) buy += buy/2;    //0.011.25
-        console.log(buy + ", " + JSON.stringify(eth));
         setTimeout(async () => {
-            //await marketBuyAndLimitSell(buy);
+            await marketBuyAndLimitSell(buy);
         }, 3000);
 
     }).catch((err) => {
