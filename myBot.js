@@ -8,13 +8,18 @@ new CronJob(cronInterval, function() {
     console.log("executing");
     var eth = null;
     Coss.getAccountBalances().then((data) => {    
-        eth = data[68];
+        for (let i = 0; i < data.length; i++) {
+            if(data[i].currency_code == "ETH"){
+                eth = data[i];
+                break;
+            }
+        }
         var buy = parseFloat(process.env.ETH_ORDER_SIZE);                             //0.005
         if(eth && eth.currency_code == 'ETH' && eth.available > 0.8) buy += buy/2;    //0.007.5
         if(eth && eth.currency_code == 'ETH' && eth.available > 1.2) buy += buy/2;    //0.011.25
-        
+        console.log(buy + ", " + JSON.stringify(eth));
         setTimeout(async () => {
-            await marketBuyAndLimitSell(buy);
+            //await marketBuyAndLimitSell(buy);
         }, 3000);
 
     }).catch((err) => {
