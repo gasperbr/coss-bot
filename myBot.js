@@ -81,10 +81,10 @@ async function marketBuyAndLimitSell(ethAmmount) {
 }
 
 function log(text, file, logToConsole) {
-
     if(logToConsole) {
         console.log(new Date() + " ... " + text);
     }
+    if (process.env.LOG === 'false') return;
     fs.appendFile(file, new Date() + ' ...  ' + text + "\n", function (err) {
         if (err) throw err;
     });
