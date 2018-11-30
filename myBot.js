@@ -4,26 +4,12 @@ var CronJob = require('cron').CronJob;
 const cronInterval = '0 */'+ process.env.TIME_INTERVAL +' * * * *' ;
 
 new CronJob(cronInterval, function() {
-    
-    console.log("executing");
-    var eth = null;
-    Coss.getAccountBalances().then((data) => {    
-        for (let i = 0; i < data.length; i++) {
-            if(data[i].currency_code == "ETH"){
-                eth = data[i];
-                break;
-            }
-        }
-        var buy = parseFloat(process.env.ETH_ORDER_SIZE);                             //0.005
-        if(eth && eth.currency_code == 'ETH' && eth.available > 0.8) buy += buy/2;    //0.007.5
-        if(eth && eth.currency_code == 'ETH' && eth.available > 1.2) buy += buy/2;    //0.011.25
-        setTimeout(async () => {
-            await marketBuyAndLimitSell(buy);
-        }, 3000);
 
-    }).catch((err) => {
-        console.log(err);
-    });
+    var buy = parseFloat(process.env.ETH_ORDER_SIZE);                             //0.005
+    setTimeout(async () => {
+        await marketBuyAndLimitSell(buy);
+    }, 3000);
+
 }, null, true, 'America/Los_Angeles');
 
 /** LOGIC */
@@ -39,10 +25,10 @@ async function marketBuyAndLimitSell(ethAmmount) {
         const profit = sellAtProfit();
         const sellAt = parseInt(askPrice * profit * 100000000,10) / 100000000;
         const wantToBuy = parseInt((ethAmmount / askPrice)*1000, 10) / 1000;  //buy 22.4 coss
-        const ammount = wantToBuy > askAmmount ? askAmmount : wantToBuy;  //if less coss is available, less will be bought
-        
+        //console.log(wantToBuy, askAmmount);
+        //const ammount = wantToBuy > askAmmount ? askAmmount : wantToBuy;  //if less coss is available, less will be bought
+        const ammount = wantToBuy;
         try{//BUY
-
             await Coss.placeLimitOrder({Symbol: 'coss-eth', Side: 'Buy', Price: Number(askPrice), Amount: Number(ammount)});
             log(`bought ${ammount} coss @${askPrice}`, 'history.txt', true);
 
@@ -84,7 +70,6 @@ function log(text, file, logToConsole) {
     if(logToConsole) {
         console.log(new Date() + " ... " + text);
     }
-    if (process.env.LOG === 'false') return;
     fs.appendFile(file, new Date() + ' ...  ' + text + "\n", function (err) {
         if (err) throw err;
     });
