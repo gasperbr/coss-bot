@@ -19,13 +19,19 @@ async function marketBuyAndLimitSell(ethAmmount) {
     try {
 
         const marketSides = await Coss.getMarketSides({Symbol: "coss-eth"});
-        //console.log("..........."+marketSides+"...........");
-        const askPrice = marketSides[1][0];
+        console.log("..........."+marketSides+"...........");
+        var askPrice = marketSides[1][0];
         const askAmmount = marketSides[1][1];
         const profit = sellAtProfit();
-        const sellAt = parseInt(askPrice * profit * 100000000,10) / 100000000;
+        var sellAt = parseInt(askPrice * profit * 100000000,10) / 100000000;
         const wantToBuy = parseInt((ethAmmount / askPrice)*1000, 10) / 1000;  //buy 22.4 coss
         //console.log(wantToBuy, askAmmount);
+        if(askAmmount * askPrice < 0.003) {
+            askPrice *=2;
+            sellAt *=1.03;
+        }
+        sellAt = parseInt(sellAt * 10000000, 10) * 10;
+        sellAt /= 100000000;
         //const ammount = wantToBuy > askAmmount ? askAmmount : wantToBuy;  //if less coss is available, less will be bought
         const ammount = wantToBuy;
         try{//BUY
@@ -35,7 +41,7 @@ async function marketBuyAndLimitSell(ethAmmount) {
             setTimeout(async () => {
 
                 try{//SELL
-                    const ammountTosell = parseInt(ammount * process.env.SELL_COSS * 100, 10) / 100;
+                    const ammountTosell = parseInt(ammount * process.env.SELL_COSS * 100000000, 10) / 100000000;
                     s = await Coss.placeLimitOrder({Symbol: 'coss-eth', Side: 'Sell', Price: Number(sellAt), Amount: Number(ammountTosell)});
                     //console.log(s)
                     log(`selling ${ammountTosell} coss @${sellAt} with ${(profit-1) * 100} bruto profit`, 'history.txt', true);
@@ -43,9 +49,6 @@ async function marketBuyAndLimitSell(ethAmmount) {
                 } catch(err){
                     console.log(err);
                     log('Error placing limit sell order', 'history.txt', true);
-                    //mySellOrder.then((p)=> {
-                    //    log(err + ' ' + p, 'errors.txt', false);
-                    //});
                 }
             }, 3000);
 
